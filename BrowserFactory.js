@@ -17,12 +17,12 @@ class BrowserFactory {
       headless: isHeadless,
       args: [
         ...(useConfig.launchOptions?.args || []),
-        '--window-size=480,800', // Good default for desktop
+        '--window-size=480,800',
       ],
     };
 
     // Pick which browser to launch (from your config)
-    let browserName = 'chromium'; // default fallback
+    let browserName = 'chromium'; 
     const projectConfig = config.projects.find(p => p.name === projectName);
     if (projectConfig?.use?.browserName) {
       browserName = projectConfig.use.browserName;

@@ -1,5 +1,7 @@
 # Mobile Test Automation Project
 
+[![Watch the demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
 This project provides automated end-to-end (E2E) tests for mobile web applications using [Playwright](https://playwright.dev/). It is pre-configured to emulate real mobile devices (Android and iOS) and includes custom browser/context management, global locators, and element descriptions for robust and maintainable test scripts.
 
 ---
