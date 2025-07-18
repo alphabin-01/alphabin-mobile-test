@@ -17,24 +17,33 @@ jobs:
         shardTotal: [10]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: ⬢ Setup Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install dependencies and Playwright
+      - name: 💾 Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: 📦 Install deps + browsers
         run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Run Android Tests (Shard ${{ matrix.shardIndex }})
+      - name: ▶️ Run shard ${{ matrix.shardIndex }}
         run: |
           npx playwright test --project="Mobile Galaxy S20 Ultra" \
             --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
-      - name: Upload Android Report
+      - name: ☁️ Upload blob report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
@@ -47,22 +56,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: ⬢ Setup Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install dependencies and Playwright
+      - name: 💾 Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: 📦 Install deps + browsers
         run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Run iOS Tests
+      - name: ▶️ Run iOS Safari tests
         run: npx playwright test --project="Mobile Safari"
 
-      - name: Upload iOS Report
+      - name: ☁️ Upload iOS Report
         uses: actions/upload-artifact@v4
         with:
           name: ios-report
@@ -75,17 +93,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: ⬢ Setup Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Download All Reports
+      - name: 📥 Download all reports
         uses: actions/download-artifact@v4
         with:
           name: Playwright Test Report
@@ -93,7 +112,7 @@ jobs:
           pattern: "*-report"
           merge-multiple: true
 
-      - name: Upload Combined Report to TestDino
+      - name: 🧪 Upload Combined Report to TestDino
         env:
           NODE_ENV: 'staging'
         run: |

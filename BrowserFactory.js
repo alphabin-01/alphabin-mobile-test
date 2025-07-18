@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 class BrowserFactory {
-  static async createBrowserWithContext(contextOptions = {}) {
+  static async createBrowserWithContext(browserName) {
     let browser;
     let context;
 
