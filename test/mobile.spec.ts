@@ -1,20 +1,27 @@
-import { test, expect, devices } from '@playwright/test';
-import BrowserFactory from '../BrowserFactory.js';
-import abPlaywright from 'alphabin-pw';
-import { descriptions } from '../elementDescriptions.js';
-import { locators } from '../globalLocator.js';
+const { locators } = require('../globalLocator.js');
+const { test, expect, devices } = require('@playwright/test');
+const BrowserFactory = require('../BrowserFactory.js');
+const abPlaywright = require("alphabin-pw");
+const config = require('../playwright.config.js');
+const { descriptions } = require('../elementDescriptions.js')
 
 let context;
 
+const projectToBrowser = {
+  'Mobile Galaxy S20 Ultra': 'chromium',
+  'Mobile Safari': 'webkit',
+  // add more if needed
+};
+
 test.beforeEach(async ({}, testInfo) => {
-  const result = await BrowserFactory.createBrowserWithContext(
-    testInfo.project.name
-  );
+  const browserName = projectToBrowser[testInfo.project.name];
+  const projectConfig = config.projects.find(p => p.name === testInfo.project.name);
+  const result = await BrowserFactory.createBrowserWithContext(browserName, projectConfig);
   context = result.context;
 });
 
 test.afterEach(async () => {
-  await context?.close();
+    await context?.close();
 });
 
 test.use({ ...devices['Galaxy S20 Ultra'] });

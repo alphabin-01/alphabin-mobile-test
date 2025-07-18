@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 class BrowserFactory {
-  static async createBrowserWithContext(browserName) {
+  static async createBrowserWithContext(browserName, projectConfig) {
     let browser;
     let context;
 
@@ -48,7 +48,7 @@ class BrowserFactory {
     // Merge device settings + custom context options
     let browserContextOptions = {
       ...deviceSettings,
-      ...contextOptions,
+      // ...contextOptions,
     };
 
     // ✅ Apply permissions if needed

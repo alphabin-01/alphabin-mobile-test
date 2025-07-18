@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-export default defineConfig({
+module.exports = defineConfig({
   // Directory where your tests are located
   testDir: './test',
   fullyParallel: true,
@@ -14,20 +14,20 @@ export default defineConfig({
     }],
     ['blob', { outputDir: 'blob-report' }], // Use blob reporter
     ['json', { outputFile: './playwright-report/report.json' }],
-      ['@alphabin/trx', {
+      // ['@alphabin/trx', {
 
-       // Required configuration
-       serverUrl: 'https://staging-api.testdino.com',
-       apiKey: 'trx_staging_96dde6aa397caba148106304889ae88a2a5339b4e0da54e64a8f2324e87ec73c',
+      //  // Required configuration
+      //  serverUrl: 'https://staging-api.testdino.com',
+      //  apiKey: 'trx_staging_96dde6aa397caba148106304889ae88a2a5339b4e0da54e64a8f2324e87ec73c',
    
 
-      // Optional: Custom tags
-      tags: [
-        'automated',
-        process.env.TEST_ENV || 'staging',
-        process.env.BRANCH_NAME || 'main'
-      ],
-    }]
+      // // Optional: Custom tags
+      // tags: [
+      //   'automated',
+      //   process.env.TEST_ENV || 'staging',
+      //   process.env.BRANCH_NAME || 'main'
+      // ],
+    // }]
   ],
   timeout: 60000,
 
