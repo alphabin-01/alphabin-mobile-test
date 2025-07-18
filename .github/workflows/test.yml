@@ -1,18 +1,13 @@
-# .github/workflows/playwright-daily.yml
-# Runs Playwright test shards every day at **11 : 42 AM IST** (06 : 12 UTC)
-# plus anytime you trigger it manually from the Actions tab.
-
-name: Run Playwright tests
+name: Playwright Mobile Browser Tests
 
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is always UTC → 06:12 UTC = 11:42 AM IST (UTC+5:30)
-    - cron: '*/5 * * * 1-5'
+    - cron: '12 6 * * 1-5'  # 11:42 AM IST on weekdays
 
 jobs:
-  run-tests:
-    name: Run Playwright shards
+  android-tests:
+    name: Android Chrome (Shard ${{ matrix.shardIndex }})
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,80 +19,81 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install deps + browsers
+      - name: Install dependencies and Playwright
         run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Run shard ${{ matrix.shardIndex }}
-        run: npm run test:chrome -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      - name: Run Android Tests (Shard ${{ matrix.shardIndex }})
+        run: |
+          npx playwright test --project="Android Chrome" \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
-      - name: Upload blob report to GitHub Actions Artifacts
+      - name: Upload Android Report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: blob-report-${{ matrix.shardIndex }}
-          path: ./blob-report
-          retention-days: 1
+          name: android-report-${{ matrix.shardIndex }}
+          path: ./playwright-report
+          retention-days: 7
 
-  merge-reports:
-    name: Merge Reports
-    needs: run-tests
-    if: always()             # run even if some shards fail
+  ios-tests:
+    name: iOS Safari (iPhone 12)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install deps + browsers
+      - name: Install dependencies and Playwright
         run: |
           npm ci
           npx playwright install --with-deps
 
-      - name: Download all blob reports
-        uses: actions/download-artifact@v4
-        with:
-          path: ./all-blob-reports
-          pattern: blob-report-*
-          merge-multiple: true
+      - name: Run iOS Tests
+        run: npx playwright test --project="iOS WebKit"
 
-      - name: Merge HTML & JSON reports
-        run: npx playwright merge-reports --config=playwright.config.js ./all-blob-reports
-
-      - name: Upload combined report
+      - name: Upload iOS Report
         uses: actions/upload-artifact@v4
+        with:
+          name: ios-report
+          path: ./playwright-report
+          retention-days: 7
+
+  upload-to-testdino:
+    name: Upload Combined Report to TestDino
+    needs: [android-tests, ios-tests]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download All Reports
+        uses: actions/download-artifact@v4
         with:
           name: Playwright Test Report
           path: ./playwright-report
-          retention-days: 14
+          pattern: "*-report"
+          merge-multiple: true
 
-      - name: Send TestDino report
+      - name: Upload Combined Report to TestDino
         env:
           NODE_ENV: 'staging'
         run: |
