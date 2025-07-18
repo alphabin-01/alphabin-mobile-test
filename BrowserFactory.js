@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 class BrowserFactory {
-  static async createBrowserWithContext(projectName, contextOptions = {}) {
+  static async createBrowserWithContext(contextOptions = {}) {
     let browser;
     let context;
 
@@ -20,13 +20,6 @@ class BrowserFactory {
         '--window-size=480,800',
       ],
     };
-
-    // Pick which browser to launch (from your config)
-    let browserName = 'chromium'; 
-    const projectConfig = config.projects.find(p => p.name === projectName);
-    if (projectConfig?.use?.browserName) {
-      browserName = projectConfig.use.browserName;
-    }
 
     switch (browserName.toLowerCase()) {
       case 'chromium':

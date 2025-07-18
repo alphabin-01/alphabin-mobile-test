@@ -18,7 +18,7 @@ export default defineConfig({
 
        // Required configuration
        serverUrl: 'https://staging-api.testdino.com',
-       apiKey: 'trx_staging_8e8d07d94ddde82c43fac1c83401555efbdff83c0e290138a95905df2a8e739e',
+       apiKey: 'trx_staging_96dde6aa397caba148106304889ae88a2a5339b4e0da54e64a8f2324e87ec73c',
    
 
       // Optional: Custom tags

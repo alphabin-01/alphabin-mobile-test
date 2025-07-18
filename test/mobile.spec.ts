@@ -1,7 +1,6 @@
 import { test, expect, devices } from '@playwright/test';
 import BrowserFactory from '../BrowserFactory.js';
 import abPlaywright from 'alphabin-pw';
-import config from '../playwright.config.js';
 import { descriptions } from '../elementDescriptions.js';
 import { locators } from '../globalLocator.js';
 
