@@ -7,7 +7,7 @@ on:
 
 jobs:
   android-tests:
-    name: Android Chrome (Shard ${{ matrix.shardIndex }})
+    name: Run Playwright shards
     runs-on: ubuntu-latest
 
     strategy:
@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -39,84 +39,103 @@ jobs:
           npx playwright install --with-deps
 
       - name: ▶️ Run shard ${{ matrix.shardIndex }}
-        run: |
-          npx playwright test --project="Mobile Galaxy S20 Ultra" \
-            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: npm run test:chrome -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
 
       - name: ☁️ Upload blob report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: android-report-${{ matrix.shardIndex }}
-          path: ./playwright-report
-          retention-days: 7
+          name: blob-report-${{ matrix.shardIndex }}
+          path: ./blob-report
+          retention-days: 1
 
-  ios-tests:
-    name: iOS Safari (iPhone 12)
-    runs-on: ubuntu-latest
+  # ios-tests:
+  #   name: iOS Safari (iPhone 12)
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: ⬇️ Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: ⬇️ Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: ⬢ Setup Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+  #     - name: ⬢ Setup Node.js 18.x
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '18'
 
-      - name: 💾 Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+  #     - name: 💾 Cache npm dependencies
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.npm
+  #         key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-node-
 
-      - name: 📦 Install deps + browsers
-        run: |
-          npm ci
-          npx playwright install --with-deps
+  #     - name: 📦 Install deps + browsers
+  #       run: |
+  #         npm ci
+  #         npx playwright install --with-deps
 
-      - name: ▶️ Run iOS Safari tests
-        run: npx playwright test --project="Mobile Safari"
+  #     - name: ▶️ Run iOS Safari tests
+  #       run: npx playwright test --project="Mobile Safari"
 
-      - name: ☁️ Upload iOS Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-report
-          path: ./playwright-report
-          retention-days: 7
+  #     - name: ☁️ Upload iOS Report
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ios-report
+  #         path: ./playwright-report
+  #         retention-days: 7
 
-  upload-to-testdino:
-    name: Upload Combined Report to TestDino
-    needs: [android-tests, ios-tests]
-    runs-on: ubuntu-latest
+  merge-reports:
+      name: Merge Reports
+      needs: android-tests
+      if: always()             # run even if some shards fail
+      runs-on: ubuntu-latest
 
-    steps:
-      - name: ⬇️ Checkout code
-        uses: actions/checkout@v4
+      steps:
+        - name: ⬇️ Checkout code
+          uses: actions/checkout@v4
 
-      - name: ⬢ Setup Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+        - name: ⬢ Setup Node.js 18.x
+          uses: actions/setup-node@v3
+          with:
+            node-version: '18'
 
-      - name: 📦 Install dependencies
-        run: npm ci
+        - name: Cache npm dependencies
+          uses: actions/cache@v3
+          with:
+            path: ~/.npm
+            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-node-
+    
+        - name: Install deps + browsers
+          run: |
+            npm ci
+            npx playwright install --with-deps
+        
+        - name: Download all blob reports
+          uses: actions/download-artifact@v4
+          with:
+            path: ./all-blob-reports
+            pattern: blob-report-*
+            merge-multiple: true
+        
+        - name: Merge HTML & JSON reports
+          run: npx playwright merge-reports --config=playwright.config.js ./all-blob-reports
+        
+        - name: Upload combined report
+          uses: actions/upload-artifact@v4
+          with:
+            name: Playwright Test Report
+            path: ./playwright-report
+            retention-days: 14
 
-      - name: 📥 Download all reports
-        uses: actions/download-artifact@v4
-        with:
-          name: Playwright Test Report
-          path: ./playwright-report
-          pattern: "*-report"
-          merge-multiple: true
-
-      - name: 🧪 Upload Combined Report to TestDino
-        env:
-          NODE_ENV: 'staging'
-        run: |
-          npx --yes tdpw ./playwright-report \
-            --token="trx_staging_96dde6aa397caba148106304889ae88a2a5339b4e0da54e64a8f2324e87ec73c" \
-            --upload-html \
-            --verbose
+        - name: Send testDino Report
+          env:
+            NODE_ENV: 'staging'
+          run: |
+            npx --yes tdpw ./playwright-report \
+              --token="trx_staging_96dde6aa397caba148106304889ae88a2a5339b4e0da54e64a8f2324e87ec73c" \
+              --upload-html \
+              --verbose

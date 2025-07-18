@@ -10,7 +10,7 @@ class BrowserFactory {
 
     // Support both direct and default-nested use property
     const useConfig = config.use || config.default?.use || {};
-    const isHeadless = useConfig.headless !== false;
+    const isHeadless = useConfig.headless !== true;
 
     const launchOptions = {
       ...useConfig.launchOptions,

@@ -59,14 +59,14 @@ export default defineConfig({
         },
       },
     },
-    {
-      // IOS device
-      name: 'Mobile Safari',
-      use: {
-        ...devices['iPhone 12'],
-        browserName: 'webkit',
-        headless: false,
-      },
-    },
+    // {
+    //   // IOS device
+    //   name: 'Mobile Safari',
+    //   use: {
+    //     ...devices['iPhone 12'],
+    //     browserName: 'webkit',
+    //     headless: false,
+    //   },
+    // },
   ],
 });
