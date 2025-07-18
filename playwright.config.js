@@ -1,19 +1,32 @@
-const { defineConfig, devices } = require('@playwright/test');
+import { defineConfig, devices } from '@playwright/test';
 
-module.exports = defineConfig({
+export default defineConfig({
   // Directory where your tests are located
   testDir: './test',
-
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: 5,
+  reporter: [
+    ['html', {
+      outputFolder: 'playwright-report',
+      open: 'never'
+    }],
+    ['blob', { outputDir: 'blob-report' }], // Use blob reporter
+    ['json', { outputFile: './playwright-report/report.json' }],
+  ],
   timeout: 60000,
 
   use: {
-    headless: false, 
+    headless: true, 
     baseURL: 'http://demo.alphabin.co',
     viewport: { width: 412, height: 915 },
     launchOptions: {
       args: ['--window-size=412,915'],
     },
-    screenshot: 'only-on-failure',
+    screenshot: 'on',
+    trace: 'on',
+    video: 'on',
   },
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
@@ -42,7 +55,4 @@ module.exports = defineConfig({
       },
     },
   ],
-
-  // Generates an HTML report after test runs
-  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
 });
